@@ -32,6 +32,10 @@ interface DrawerContextValue {
   container?: HTMLElement | null;
   autoFocus?: boolean;
   shouldAnimate?: React.RefObject<boolean>;
+  mode?: 'default' | 'card';
+  animationDuration?: number;
+  animationTimingFunction?: string;
+  hasFooter?: boolean;
 }
 
 export const DrawerContext = React.createContext<DrawerContextValue>({
@@ -64,6 +68,10 @@ export const DrawerContext = React.createContext<DrawerContextValue>({
   noBodyStyles: false,
   container: null,
   autoFocus: false,
+  mode: 'default',
+  animationDuration: 0.5,
+  animationTimingFunction: 'cubic-bezier(0.32, 0.72, 0, 1)',
+  hasFooter: false,
 });
 
 export const useDrawerContext = () => {

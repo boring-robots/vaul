@@ -1,9 +1,9 @@
 [data-vaul-drawer] {
   touch-action: none;
   will-change: transform;
-  transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
-  animation-duration: 0.5s;
-  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  transition: transform var(--vaul-duration, 0.5s) var(--vaul-timing-function, cubic-bezier(0.32, 0.72, 0, 1));
+  animation-duration: var(--vaul-duration, 0.5s);
+  animation-timing-function: var(--vaul-timing-function, cubic-bezier(0.32, 0.72, 0, 1));
 }
 
 [data-vaul-drawer][data-vaul-snap-points='false'][data-vaul-drawer-direction='bottom'][data-state='open'] {
@@ -67,8 +67,8 @@
 }
 
 [data-vaul-overlay][data-vaul-snap-points='false'] {
-  animation-duration: 0.5s;
-  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  animation-duration: var(--vaul-duration, 0.5s);
+  animation-timing-function: var(--vaul-timing-function, cubic-bezier(0.32, 0.72, 0, 1));
 }
 [data-vaul-overlay][data-vaul-snap-points='false'][data-state='open'] {
   animation-name: fadeIn;
@@ -83,7 +83,7 @@
 
 [data-vaul-overlay][data-vaul-snap-points='true'] {
   opacity: 0;
-  transition: opacity 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: opacity var(--vaul-duration, 0.5s) var(--vaul-timing-function, cubic-bezier(0.32, 0.72, 0, 1));
 }
 
 [data-vaul-overlay][data-vaul-snap-points='true'] {
@@ -253,4 +253,164 @@
   to {
     transform: translate3d(var(--initial-transform, 100%), 0, 0);
   }
+}
+
+/* Card mode positioning */
+[data-vaul-drawer][data-vaul-mode='card'][data-vaul-drawer-direction='bottom'] {
+  left: 0.5rem;
+  right: 0.5rem;
+  bottom: 3rem;
+  max-width: calc(100% - 1rem);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+[data-vaul-drawer][data-vaul-mode='card'][data-vaul-drawer-direction='top'] {
+  left: 0.5rem;
+  right: 0.5rem;
+  top: 3rem;
+  max-width: calc(100% - 1rem);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+[data-vaul-drawer][data-vaul-mode='card'][data-vaul-drawer-direction='left'] {
+  top: 0.5rem;
+  bottom: 0.5rem;
+  left: 3rem;
+  max-height: calc(100% - 1rem);
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+[data-vaul-drawer][data-vaul-mode='card'][data-vaul-drawer-direction='right'] {
+  top: 0.5rem;
+  bottom: 0.5rem;
+  right: 3rem;
+  max-height: calc(100% - 1rem);
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+/* Card mode animations */
+[data-vaul-drawer][data-vaul-mode='card'][data-vaul-snap-points='false'][data-vaul-drawer-direction='bottom'][data-state='open'] {
+  animation-name: slideFromBottomCard;
+}
+[data-vaul-drawer][data-vaul-mode='card'][data-vaul-snap-points='false'][data-vaul-drawer-direction='bottom'][data-state='closed'] {
+  animation-name: slideToBottomCard;
+}
+
+[data-vaul-drawer][data-vaul-mode='card'][data-vaul-snap-points='false'][data-vaul-drawer-direction='top'][data-state='open'] {
+  animation-name: slideFromTopCard;
+}
+[data-vaul-drawer][data-vaul-mode='card'][data-vaul-snap-points='false'][data-vaul-drawer-direction='top'][data-state='closed'] {
+  animation-name: slideToTopCard;
+}
+
+[data-vaul-drawer][data-vaul-mode='card'][data-vaul-snap-points='false'][data-vaul-drawer-direction='left'][data-state='open'] {
+  animation-name: slideFromLeftCard;
+}
+[data-vaul-drawer][data-vaul-mode='card'][data-vaul-snap-points='false'][data-vaul-drawer-direction='left'][data-state='closed'] {
+  animation-name: slideToLeftCard;
+}
+
+[data-vaul-drawer][data-vaul-mode='card'][data-vaul-snap-points='false'][data-vaul-drawer-direction='right'][data-state='open'] {
+  animation-name: slideFromRightCard;
+}
+[data-vaul-drawer][data-vaul-mode='card'][data-vaul-snap-points='false'][data-vaul-drawer-direction='right'][data-state='closed'] {
+  animation-name: slideToRightCard;
+}
+
+@keyframes slideFromBottomCard {
+  from {
+    transform: translate3d(0, calc(100% + 3rem), 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes slideToBottomCard {
+  to {
+    transform: translate3d(0, calc(100% + 3rem), 0);
+  }
+}
+
+@keyframes slideFromTopCard {
+  from {
+    transform: translate3d(0, calc(-100% - 3rem), 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes slideToTopCard {
+  to {
+    transform: translate3d(0, calc(-100% - 3rem), 0);
+  }
+}
+
+@keyframes slideFromLeftCard {
+  from {
+    transform: translate3d(calc(-100% - 3rem), 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes slideToLeftCard {
+  to {
+    transform: translate3d(calc(-100% - 3rem), 0, 0);
+  }
+}
+
+@keyframes slideFromRightCard {
+  from {
+    transform: translate3d(calc(100% + 3rem), 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes slideToRightCard {
+  to {
+    transform: translate3d(calc(100% + 3rem), 0, 0);
+  }
+}
+
+/* Content inner wrapper */
+[data-vaul-content-inner] {
+  display: contents;
+}
+
+/* Header styles */
+[data-vaul-header] {
+  position: relative;
+  z-index: 1;
+}
+
+/* Footer styles */
+[data-vaul-footer] {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+[data-vaul-footer][data-vaul-safe-area='true'] {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Scroll sentinel for header */
+[data-vaul-scroll-sentinel] {
+  position: absolute;
+  top: 0;
+  height: 1px;
+  width: 100%;
+  pointer-events: none;
 }

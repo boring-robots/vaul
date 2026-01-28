@@ -134,6 +134,26 @@ export type DialogProps = {
   onAnimationEnd?: (open: boolean) => void;
   preventScrollRestoration?: boolean;
   autoFocus?: boolean;
+  /**
+   * Display mode for the drawer. 'card' adds padding from screen edges.
+   * @default 'default'
+   */
+  mode?: 'default' | 'card';
+  /**
+   * Duration of animations in seconds.
+   * @default 0.5
+   */
+  animationDuration?: number;
+  /**
+   * CSS timing function for animations.
+   * @default 'cubic-bezier(0.32, 0.72, 0, 1)'
+   */
+  animationTimingFunction?: string;
+  /**
+   * When `true` disables all animations.
+   * @default false
+   */
+  disableAnimation?: boolean;
 } & (WithFadeFromProps | WithoutFadeFromProps);
 
 export function Root({
@@ -166,6 +186,10 @@ export function Root({
   onAnimationEnd,
   container,
   autoFocus = false,
+  mode = 'default',
+  animationDuration = 0.5,
+  animationTimingFunction = 'cubic-bezier(0.32, 0.72, 0, 1)',
+  disableAnimation = false,
 }: DialogProps) {
   const [isOpen = false, setIsOpen] = useControllableState({
     defaultProp: defaultOpen,
@@ -177,9 +201,10 @@ export function Root({
         restorePositionSetting();
       }
 
+      const duration = disableAnimation ? 0 : animationDuration;
       setTimeout(() => {
         onAnimationEnd?.(o);
-      }, TRANSITIONS.DURATION * 1000);
+      }, duration * 1000);
 
       if (o && !modal) {
         if (typeof window !== 'undefined') {
@@ -190,12 +215,13 @@ export function Root({
       }
 
       if (!o) {
-        // This will be removed when the exit animation ends (`500ms`)
+        // This will be removed when the exit animation ends
         document.body.style.pointerEvents = 'auto';
       }
     },
   });
   const [hasBeenOpened, setHasBeenOpened] = React.useState<boolean>(false);
+  const [hasFooter, setHasFooter] = React.useState<boolean>(false);
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
   const [justReleased, setJustReleased] = React.useState<boolean>(false);
   const overlayRef = React.useRef<HTMLDivElement>(null);
@@ -792,6 +818,10 @@ export function Root({
           noBodyStyles,
           container,
           autoFocus,
+          mode,
+          animationDuration: disableAnimation ? 0 : animationDuration,
+          animationTimingFunction,
+          hasFooter,
         }}
       >
         {children}
@@ -801,8 +831,8 @@ export function Root({
 }
 
 export const Overlay = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>>(
-  function ({ ...rest }, ref) {
-    const { overlayRef, snapPoints, onRelease, shouldFade, isOpen, modal, shouldAnimate } = useDrawerContext();
+  function ({ style, ...rest }, ref) {
+    const { overlayRef, snapPoints, onRelease, shouldFade, isOpen, modal, shouldAnimate, animationDuration, animationTimingFunction } = useDrawerContext();
     const composedRef = useComposedRefs(ref, overlayRef);
     const hasSnapPoints = snapPoints && snapPoints.length > 0;
     const onMouseUp = React.useCallback((event: React.PointerEvent<HTMLDivElement>) => onRelease(event), [onRelease]);
@@ -820,6 +850,11 @@ export const Overlay = React.forwardRef<HTMLDivElement, React.ComponentPropsWith
         data-vaul-snap-points={isOpen && hasSnapPoints ? 'true' : 'false'}
         data-vaul-snap-points-overlay={isOpen && shouldFade ? 'true' : 'false'}
         data-vaul-animate={shouldAnimate?.current ? 'true' : 'false'}
+        style={{
+          '--vaul-duration': `${animationDuration}s`,
+          '--vaul-timing-function': animationTimingFunction,
+          ...style,
+        } as React.CSSProperties}
         {...rest}
       />
     );
@@ -828,10 +863,19 @@ export const Overlay = React.forwardRef<HTMLDivElement, React.ComponentPropsWith
 
 Overlay.displayName = 'Drawer.Overlay';
 
-export type ContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>;
+export type ContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+  /**
+   * Class name for the inner scrollable wrapper
+   */
+  wrapperClassName?: string;
+  /**
+   * Style for the inner scrollable wrapper
+   */
+  wrapperStyle?: React.CSSProperties;
+};
 
 export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
-  { onPointerDownOutside, style, onOpenAutoFocus, ...rest },
+  { onPointerDownOutside, style, onOpenAutoFocus, wrapperClassName, wrapperStyle, children, ...rest },
   ref,
 ) {
   const {
@@ -850,6 +894,10 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     handleOnly,
     shouldAnimate,
     autoFocus,
+    mode,
+    animationDuration,
+    animationTimingFunction,
+    hasFooter,
   } = useDrawerContext();
   // Needed to use transition instead of animations
   const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(false);
@@ -902,6 +950,8 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
     <DialogPrimitive.Content
       data-vaul-drawer-direction={direction}
       data-vaul-drawer=""
+      data-vaul-mode={mode}
+      data-vaul-has-footer={hasFooter ? 'true' : 'false'}
       data-vaul-delayed-snap-points={delayedSnapPoints ? 'true' : 'false'}
       data-vaul-snap-points={isOpen && hasSnapPoints ? 'true' : 'false'}
       data-vaul-custom-container={container ? 'true' : 'false'}
@@ -912,9 +962,15 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
         snapPointsOffset && snapPointsOffset.length > 0
           ? ({
               '--snap-point-height': `${snapPointsOffset[activeSnapPointIndex ?? 0]!}px`,
+              '--vaul-duration': `${animationDuration}s`,
+              '--vaul-timing-function': animationTimingFunction,
               ...style,
             } as React.CSSProperties)
-          : style
+          : ({
+              '--vaul-duration': `${animationDuration}s`,
+              '--vaul-timing-function': animationTimingFunction,
+              ...style,
+            } as React.CSSProperties)
       }
       onPointerDown={(event) => {
         if (handleOnly) return;
@@ -980,7 +1036,15 @@ export const Content = React.forwardRef<HTMLDivElement, ContentProps>(function (
           handleOnPointerUp(lastKnownPointerEventRef.current);
         }
       }}
-    />
+    >
+      <div
+        data-vaul-content-inner=""
+        className={wrapperClassName}
+        style={wrapperStyle}
+      >
+        {children}
+      </div>
+    </DialogPrimitive.Content>
   );
 });
 
@@ -1095,6 +1159,82 @@ export const Handle = React.forwardRef<HTMLDivElement, HandleProps>(function (
 
 Handle.displayName = 'Drawer.Handle';
 
+// Hoist static style objects outside component to avoid re-creating on every render
+const SENTINEL_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  height: '1px',
+  width: '100%',
+  pointerEvents: 'none',
+};
+
+export interface HeaderProps extends React.ComponentPropsWithoutRef<'div'> {
+  /**
+   * When `true`, adds a scroll detection via IntersectionObserver and applies `data-vaul-scrolled` attribute
+   * @default false
+   */
+  showBorderOnScroll?: boolean;
+}
+
+export const Header = React.forwardRef<HTMLDivElement, HeaderProps>(function Header(
+  { showBorderOnScroll = false, children, ...rest },
+  ref,
+) {
+  const headerRef = React.useRef<HTMLDivElement>(null);
+  const sentinelRef = React.useRef<HTMLDivElement>(null);
+  const composedRef = useComposedRefs(ref, headerRef);
+
+  // Memoize the intersection callback to avoid recreating on every effect run
+  const handleIntersection = React.useCallback((entries: IntersectionObserverEntry[]) => {
+    const [entry] = entries;
+    if (headerRef.current) {
+      headerRef.current.dataset.vaulScrolled = entry.isIntersecting ? 'false' : 'true';
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (!showBorderOnScroll || !sentinelRef.current) return;
+
+    const observer = new IntersectionObserver(handleIntersection, { threshold: 1.0 });
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [showBorderOnScroll, handleIntersection]);
+
+  return (
+    <>
+      {showBorderOnScroll && (
+        <div ref={sentinelRef} data-vaul-scroll-sentinel="" style={SENTINEL_STYLE} />
+      )}
+      <div ref={composedRef} data-vaul-header="" data-vaul-scrolled="false" {...rest}>
+        {children}
+      </div>
+    </>
+  );
+});
+
+Header.displayName = 'Drawer.Header';
+
+export interface FooterProps extends React.ComponentPropsWithoutRef<'div'> {
+  /**
+   * When `true`, adds padding-bottom for mobile safe areas
+   * @default true
+   */
+  safeArea?: boolean;
+}
+
+export const Footer = React.forwardRef<HTMLDivElement, FooterProps>(function Footer(
+  { safeArea = true, children, ...rest },
+  ref,
+) {
+  return (
+    <div ref={ref} data-vaul-footer="" data-vaul-safe-area={safeArea ? 'true' : 'false'} {...rest}>
+      {children}
+    </div>
+  );
+});
+
+Footer.displayName = 'Drawer.Footer';
+
 export function NestedRoot({ onDrag, onOpenChange, open: nestedIsOpen, ...rest }: DialogProps) {
   const { onNestedDrag, onNestedOpenChange, onNestedRelease } = useDrawerContext();
 
@@ -1145,4 +1285,6 @@ export const Drawer = {
   Close: DialogPrimitive.Close,
   Title: DialogPrimitive.Title,
   Description: DialogPrimitive.Description,
+  Header,
+  Footer,
 };
